@@ -1,22 +1,43 @@
+
+
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const archiver = require('archiver'); // For zipping files
+const archiver = require('archiver');
 
 const app = express();
 const cors = require('cors');
 app.use(cors());
 app.use(express.json());
 
-// Persistent directories
-const UNLABELED_DIR = path.join(__dirname, 'data', 'unlabeled');
-const LABELED_DIR = path.join(__dirname, 'data', 'labeled');
+// Directories
+const ORIGINAL_IMAGES_DIR = path.join(__dirname, 'data', 'unlabeled'); // Read-only
+const UNLABELED_DIR = path.join('/tmp', 'unlabeled');                 // Writable
+const LABELED_DIR = path.join('/tmp', 'labeled');                     // Writable
 
-// Ensure directories exist
+// Ensure writable directories exist
 [UNLABELED_DIR, LABELED_DIR].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+    fs.chmodSync(dir, 0o755);  // Read/write/execute permissions
   }
+});
+
+// Copy original images to /tmp/unlabeled on server startup
+fs.readdir(ORIGINAL_IMAGES_DIR, (err, files) => {
+  if (err) {
+    console.error('Failed to read original images:', err);
+    return;
+  }
+  files.forEach(file => {
+    const src = path.join(ORIGINAL_IMAGES_DIR, file);
+    const dest = path.join(UNLABELED_DIR, file);
+
+    if (!fs.existsSync(dest)) {
+      fs.copyFileSync(src, dest);
+      fs.chmodSync(dest, 0o644); // Ensure read/write permissions
+    }
+  });
 });
 
 // API to get a random unlabeled image
@@ -45,16 +66,27 @@ app.post('/api/label', (req, res) => {
 
   // Ensure label directory exists
   if (!fs.existsSync(labelDir)) {
-    fs.mkdirSync(labelDir, { recursive: true });
+    try {
+      fs.mkdirSync(labelDir, { recursive: true });
+      fs.chmodSync(labelDir, 0o755); // Set write permissions
+    } catch (err) {
+      console.error(`Error creating label directory: ${err.message}`);
+      return res.status(500).json({ error: 'Failed to create label directory.' });
+    }
   }
 
   const newPath = path.join(labelDir, imageName);
 
-  // Move the file
+  // Check if the file exists before moving
+  if (!fs.existsSync(oldPath)) {
+    return res.status(404).json({ error: 'Image not found.' });
+  }
+
+  // Move the file with error handling
   fs.rename(oldPath, newPath, (err) => {
     if (err) {
       console.error(`Error moving file: ${err.message}`);
-      return res.status(500).json({ error: 'Failed to move the file.' });
+      return res.status(500).json({ error: `Failed to move the file: ${err.message}` });
     }
     res.sendStatus(200);
   });
