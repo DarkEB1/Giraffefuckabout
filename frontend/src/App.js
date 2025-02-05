@@ -13,7 +13,7 @@ export default function App() {
 
   const fetchImage = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/image`);
+      const response = await fetch(`${BACKEND_URL}/image`);
       if (!response.ok) throw new Error('Failed to load image metadata');
   
       const data = await response.json();
