@@ -40,7 +40,7 @@ fs.readdir(ORIGINAL_IMAGES_DIR, (err, files) => {
   });
 });
 
-// API to get a random unlabeled image
+/// API to get a random image's metadata
 app.get('/api/image', (req, res) => {
     fs.readdir(UNLABELED_DIR, (err, files) => {
       if (err || files.length === 0) {
@@ -49,53 +49,59 @@ app.get('/api/image', (req, res) => {
   
       const randomFile = files[Math.floor(Math.random() * files.length)];
   
-      // Send the filename in a custom header
-      res.setHeader('X-Image-Name', randomFile);
-      res.setHeader('Content-Disposition', `attachment; filename="${randomFile}"`);
-  
-      res.sendFile(path.join(UNLABELED_DIR, randomFile));
+      // Send JSON metadata with image name and URL
+      res.json({
+        imageName: randomFile,
+        imageUrl: `/api/image/${encodeURIComponent(randomFile)}`
+      });
     });
   });
   
-
-// API to handle labeling
-app.post('/api/label', (req, res) => {
-  const { imageName, label } = req.body;
-
-  if (!imageName || !label) {
-    return res.status(400).json({ error: 'Missing image name or label.' });
-  }
-
-  const oldPath = path.join(UNLABELED_DIR, imageName);
-  const labelDir = path.join(LABELED_DIR, label);
-
-  // Ensure label directory exists
-  if (!fs.existsSync(labelDir)) {
-    try {
-      fs.mkdirSync(labelDir, { recursive: true });
-      fs.chmodSync(labelDir, 0o755); // Set write permissions
-    } catch (err) {
-      console.error(`Error creating label directory: ${err.message}`);
-      return res.status(500).json({ error: 'Failed to create label directory.' });
+  // New API to serve the actual image
+  app.get('/api/image/:filename', (req, res) => {
+    const filePath = path.join(UNLABELED_DIR, req.params.filename);
+  
+    // Check if the file exists before sending
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.status(404).json({ error: 'Image not found.' });
     }
-  }
-
-  const newPath = path.join(labelDir, imageName);
-
-  // Check if the file exists before moving
-  if (!fs.existsSync(oldPath)) {
-    return res.status(404).json({ error: 'Image not found.' });
-  }
-
-  // Move the file with error handling
-  fs.rename(oldPath, newPath, (err) => {
-    if (err) {
-      console.error(`Error moving file: ${err.message}`);
-      return res.status(500).json({ error: `Failed to move the file: ${err.message}` });
-    }
-    res.sendStatus(200);
   });
-});
+  
+
+  app.post('/api/label', (req, res) => {
+    const { imageName, label } = req.body;
+  
+    if (!imageName || !label) {
+      return res.status(400).json({ error: 'Missing image name or label.' });
+    }
+  
+    const oldPath = path.join(UNLABELED_DIR, imageName);
+    const labelDir = path.join(LABELED_DIR, label);
+  
+    if (!fs.existsSync(labelDir)) {
+      fs.mkdirSync(labelDir, { recursive: true });
+    }
+  
+    const newPath = path.join(labelDir, imageName);
+  
+    // Debug log
+    console.log(`Moving file from ${oldPath} to ${newPath}`);
+  
+    if (!fs.existsSync(oldPath)) {
+      return res.status(404).json({ error: 'Image not found.' });
+    }
+  
+    fs.rename(oldPath, newPath, (err) => {
+      if (err) {
+        console.error(`Error moving file: ${err.message}`);
+        return res.status(500).json({ error: `Failed to move the file: ${err.message}` });
+      }
+      res.sendStatus(200);
+    });
+  });
+  
 
 // API to download all labeled data as a ZIP
 app.get('/api/download', (req, res) => {

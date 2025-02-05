@@ -14,17 +14,11 @@ export default function App() {
   const fetchImage = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/image`);
-      if (!response.ok) throw new Error('Failed to load image');
+      if (!response.ok) throw new Error('Failed to load image metadata');
   
-      const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
-  
-      // Extract the image name from the response header
-      const imageName = response.headers.get('X-Image-Name') || 'unknown_image.jpg';
-  
-      // Set the image URL and image name
-      setImage(imageUrl);
-      setImageName(imageName);
+      const data = await response.json();
+      setImage(data.imageUrl);    // Set the image URL
+      setImageName(data.imageName);  // Set the actual image name
     } catch (error) {
       console.error('Error fetching image:', error);
     }
@@ -34,13 +28,13 @@ export default function App() {
   useEffect(() => {
     fetchImage();
   }, []); // Important: Empty dependency array to prevent infinite loop
-  
+
   const handleLabel = async (selectedLabel) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/label`, {
+      const response = await fetch(`${BACKEND_URL}/label`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageName, label: selectedLabel })  // Correct imageName used here
+        body: JSON.stringify({ imageName, label: selectedLabel })  // Correct imageName is used
       });
   
       if (!response.ok) {
@@ -49,13 +43,14 @@ export default function App() {
         alert(`Error: ${errorData.error}`);
       } else {
         alert('Label submitted successfully!');
-        fetchImage();  // Fetch the next image
+        fetchImage();  // Load the next image
       }
     } catch (error) {
       console.error('Network Error:', error);
       alert(`Network error: ${error.message}`);
     }
   };
+  
   
   return (
     <div className="flex h-screen">
