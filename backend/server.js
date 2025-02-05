@@ -45,7 +45,7 @@ app.post('/api/label', (req, res) => {
 
     const destPath = path.join(destDir, imageName);
     fs.rename(srcPath, destPath, (err) => {
-        if (err) return res.status(500).json({ error: 'Error moving file' });
+        if (err) return res.status(500).json({ error: 'Error moving file, ${err.message}' });
         res.json({ success: true });
     });
 });
