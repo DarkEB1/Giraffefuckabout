@@ -22,9 +22,10 @@ export default function App() {
       console.log('Image Metadata:', data);
   
       // Use the full URL
-      const fullImageUrl = `${BACKEND_URL}/image/${data.imageUrl}`;
-      setImage(fullImageUrl);  // This should trigger the GET request to /api/image/:filename
-      setImageName(data.imageName);
+      const response2 = await fetch(`${BACKEND_URL}/image/${data.imageUrl}`);
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+  setImage(imageUrl);
     } catch (error) {
       console.error('Error fetching image:', error);
       alert(`Error: ${error.message}`);
