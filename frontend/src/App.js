@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Select, SelectItem } from './ui/select';
 
-const BACKEND_URL = 'https://giraffe-backend-h31u.onrender.com/api'; // Update this URL
+const BACKEND_URL = 'https://giraffe-backend-h31u.onrender.com'; // Update this URL
 
 export default function App() {
   const [image, setImage] = useState(null);
@@ -12,7 +12,7 @@ export default function App() {
 
   const fetchImage = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/image`);
+      const response = await fetch(`${BACKEND_URL}/api/image`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(`Server error: ${errorData.error}`);
@@ -22,7 +22,7 @@ export default function App() {
       console.log('Image Metadata:', data);
   
       // Use the full URL
-      const response2 = await fetch(`${BACKEND_URL}/image/${data.imageUrl}`);
+      const response2 = await fetch(`${BACKEND_URL}${data.imageUrl}`);
       const blob = await response2.blob();
       const imageUrl = URL.createObjectURL(blob);
   setImage(imageUrl);
@@ -39,7 +39,7 @@ export default function App() {
 
   const handleLabel = async (selectedLabel) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/label`, {
+      const response = await fetch(`${BACKEND_URL}/api/label`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageName, label: selectedLabel })  // Correct imageName is used
