@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Select, SelectItem } from './ui/select';
 
-const BACKEND_URL = 'https://giraffe-backend-h31u.onrender.com'; // Update this URL
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||'https://giraffe-backend-h31u.onrender.com'; // Update this URL
 
 export default function App() {
   const [image, setImage] = useState(null);
