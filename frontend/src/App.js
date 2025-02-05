@@ -22,10 +22,8 @@ export default function App() {
       console.log('Image Metadata:', data);
   
       // Use the full URL
-      const response2 = await fetch(`${BACKEND_URL}${data.imageUrl}`);
-      const blob = await response2.blob();
-      const imageUrl = URL.createObjectURL(blob);
-  setImage(imageUrl);
+
+  setImage(`${BACKEND_URL}${data.imageUrl}`);
     } catch (error) {
       console.error('Error fetching image:', error);
       alert(`Error: ${error.message}`);
