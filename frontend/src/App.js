@@ -23,7 +23,7 @@ export default function App() {
   
       // Use the full URL
       const response2 = await fetch(`${BACKEND_URL}/image/${data.imageUrl}`);
-      const blob = await response.blob();
+      const blob = await response2.blob();
       const imageUrl = URL.createObjectURL(blob);
   setImage(imageUrl);
     } catch (error) {
