@@ -42,16 +42,21 @@ fs.readdir(ORIGINAL_IMAGES_DIR, (err, files) => {
 
 // API to get a random unlabeled image
 app.get('/api/image', (req, res) => {
-  fs.readdir(UNLABELED_DIR, (err, files) => {
-    if (err || files.length === 0) {
-      return res.status(404).json({ error: 'No unlabeled images found.' });
-    }
-
-    const randomFile = files[Math.floor(Math.random() * files.length)];
-    res.setHeader('Content-Disposition', `attachment; filename=${randomFile}`);
-    res.sendFile(path.join(UNLABELED_DIR, randomFile));
+    fs.readdir(UNLABELED_DIR, (err, files) => {
+      if (err || files.length === 0) {
+        return res.status(404).json({ error: 'No unlabeled images found.' });
+      }
+  
+      const randomFile = files[Math.floor(Math.random() * files.length)];
+  
+      // Send the filename in a custom header
+      res.setHeader('X-Image-Name', randomFile);
+      res.setHeader('Content-Disposition', `attachment; filename="${randomFile}"`);
+  
+      res.sendFile(path.join(UNLABELED_DIR, randomFile));
+    });
   });
-});
+  
 
 // API to handle labeling
 app.post('/api/label', (req, res) => {

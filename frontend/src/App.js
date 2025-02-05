@@ -10,34 +10,53 @@ export default function App() {
   const [label, setLabel] = useState("");
   const giraffeIDs = ["Giraffe_1", "Giraffe_2", "Giraffe_3"];
 
+
   const fetchImage = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/image`);
       if (!response.ok) throw new Error('Failed to load image');
-
+  
       const blob = await response.blob();
       const imageUrl = URL.createObjectURL(blob);
+  
+      // Extract the image name from the response header
+      const imageName = response.headers.get('X-Image-Name') || 'unknown_image.jpg';
+  
+      // Set the image URL and image name
       setImage(imageUrl);
-      setImageName(response.headers.get('Content-Disposition')?.split('filename=')[1] || 'image.jpg');
+      setImageName(imageName);
     } catch (error) {
       console.error('Error fetching image:', error);
     }
   };
+  
 
   useEffect(() => {
     fetchImage();
   }, []); // Important: Empty dependency array to prevent infinite loop
-
+  
   const handleLabel = async (selectedLabel) => {
-    await fetch(`${BACKEND_URL}/label`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageName, label: selectedLabel })
-    });
-    setLabel('');
-    fetchImage();
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/label`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageName, label: selectedLabel })  // Correct imageName used here
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error:', errorData);
+        alert(`Error: ${errorData.error}`);
+      } else {
+        alert('Label submitted successfully!');
+        fetchImage();  // Fetch the next image
+      }
+    } catch (error) {
+      console.error('Network Error:', error);
+      alert(`Network error: ${error.message}`);
+    }
   };
-
+  
   return (
     <div className="flex h-screen">
       <div className="w-1/2 p-4 flex justify-center items-center bg-gray-50">
