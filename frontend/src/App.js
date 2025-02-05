@@ -10,19 +10,24 @@ export default function App() {
   const [label, setLabel] = useState("");
   const giraffeIDs = ["Giraffe_1", "Giraffe_2", "Giraffe_3"];
 
-
   const fetchImage = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/image`);
-      if (!response.ok) throw new Error('Failed to load image metadata');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Server error: ${errorData.error}`);
+      }
   
       const data = await response.json();
-      console.log('Image URL:', data.imageUrl);  // Log the image URL
+      console.log('Image Metadata:', data);
   
-      setImage(`${BACKEND_URL}${data.imageUrl}`);  // Ensure full URL is used
+      // Use the full URL
+      const fullImageUrl = `${BACKEND_URL}/image/${data.imageUrl}`;
+      setImage(fullImageUrl);  // This should trigger the GET request to /api/image/:filename
       setImageName(data.imageName);
     } catch (error) {
       console.error('Error fetching image:', error);
+      alert(`Error: ${error.message}`);
     }
   };
   
