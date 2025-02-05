@@ -13,12 +13,14 @@ export default function App() {
 
   const fetchImage = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/image`);
+      const response = await fetch(`${BACKEND_URL}/api/image`);
       if (!response.ok) throw new Error('Failed to load image metadata');
   
       const data = await response.json();
-      setImage(data.imageUrl);    // Set the image URL
-      setImageName(data.imageName);  // Set the actual image name
+      console.log('Image URL:', data.imageUrl);  // Log the image URL
+  
+      setImage(`${BACKEND_URL}${data.imageUrl}`);  // Ensure full URL is used
+      setImageName(data.imageName);
     } catch (error) {
       console.error('Error fetching image:', error);
     }
