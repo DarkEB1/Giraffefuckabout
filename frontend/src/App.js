@@ -20,6 +20,7 @@ export default function App() {
   
       const data = await response.json();
       console.log('Image Metadata:', data);
+      setImageName(data.imageName)
   
       // Use the full URL
 
