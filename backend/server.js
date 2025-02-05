@@ -1,68 +1,87 @@
-// Backend - Node.js with Express
-
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
-const archiver = require('archiver');
+const archiver = require('archiver'); // For zipping files
 
 const app = express();
-const PORT = 3000;
 const cors = require('cors');
 app.use(cors());
-
 app.use(express.json());
-app.use(express.static('public'));
 
-const DATA_DIR = path.join(__dirname, 'data');
-const UNLABELED_DIR = path.join(DATA_DIR, 'unlabeled');
-const LABELED_DIR = path.join(DATA_DIR, 'labeled');
+// Persistent directories
+const UNLABELED_DIR = path.join(__dirname, 'data', 'unlabeled');
+const LABELED_DIR = path.join(__dirname, 'data', 'labeled');
 
-// Ensure labeled directories exist
-const categories = ['unsure', 'no_giraffe', 'multiple_giraffes'];
-if (!fs.existsSync(LABELED_DIR)) fs.mkdirSync(LABELED_DIR);
-categories.forEach(cat => {
-    const dir = path.join(LABELED_DIR, cat);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+// Ensure directories exist
+[UNLABELED_DIR, LABELED_DIR].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
 });
 
-// Serve a random image
+// API to get a random unlabeled image
 app.get('/api/image', (req, res) => {
-    fs.readdir(UNLABELED_DIR, (err, files) => {
-        if (err) return res.status(500).json({ error: 'Unable to read directory' });
-        const randomFile = files[Math.floor(Math.random() * files.length)];
-        res.sendFile(path.join(UNLABELED_DIR, randomFile));
-    });
+  fs.readdir(UNLABELED_DIR, (err, files) => {
+    if (err || files.length === 0) {
+      return res.status(404).json({ error: 'No unlabeled images found.' });
+    }
+
+    const randomFile = files[Math.floor(Math.random() * files.length)];
+    res.setHeader('Content-Disposition', `attachment; filename=${randomFile}`);
+    res.sendFile(path.join(UNLABELED_DIR, randomFile));
+  });
 });
 
-// Handle labeling submission
+// API to handle labeling
 app.post('/api/label', (req, res) => {
-    const { imageName, label } = req.body;
-    const srcPath = path.join(UNLABELED_DIR, imageName);
-    const destDir = path.join(LABELED_DIR, label);
+  const { imageName, label } = req.body;
 
-    if (!fs.existsSync(destDir)) fs.mkdirSync(destDir);
+  if (!imageName || !label) {
+    return res.status(400).json({ error: 'Missing image name or label.' });
+  }
 
-    const destPath = path.join(destDir, imageName);
-    fs.rename(srcPath, destPath, (err) => {
-        if (err) return res.status(500).json({ error: 'Error moving file, ${err.message}' });
-        res.json({ success: true });
-    });
+  const oldPath = path.join(UNLABELED_DIR, imageName);
+  const labelDir = path.join(LABELED_DIR, label);
+
+  // Ensure label directory exists
+  if (!fs.existsSync(labelDir)) {
+    fs.mkdirSync(labelDir, { recursive: true });
+  }
+
+  const newPath = path.join(labelDir, imageName);
+
+  // Move the file
+  fs.rename(oldPath, newPath, (err) => {
+    if (err) {
+      console.error(`Error moving file: ${err.message}`);
+      return res.status(500).json({ error: 'Failed to move the file.' });
+    }
+    res.sendStatus(200);
+  });
 });
 
-// Admin download route
+// API to download all labeled data as a ZIP
 app.get('/api/download', (req, res) => {
-    const archive = archiver('zip');
-    res.attachment('labeled_data.zip');
-    archive.pipe(res);
-    archive.directory(LABELED_DIR, false);
-    archive.finalize();
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  res.attachment('labeled_data.zip');
+
+  archive.on('error', (err) => {
+    console.error(`Error creating ZIP: ${err.message}`);
+    res.status(500).send({ error: 'Failed to create ZIP file.' });
+  });
+
+  archive.pipe(res);
+  archive.directory(LABELED_DIR, false);
+  archive.finalize();
 });
 
+// Health check route
 app.get('/', (req, res) => {
-    res.send('Giraffe Labeling Backend is Running!');
+  res.send('Server is running.');
 });
 
+// Start the server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
