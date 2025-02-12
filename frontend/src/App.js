@@ -8,7 +8,7 @@ export default function App() {
   const [image, setImage] = useState(null);
   const [imageName, setImageName] = useState("");
   const [label, setLabel] = useState("");
-  const giraffeIDs = ["Giraffe_1", "Giraffe_2", "Giraffe_3"];
+  const giraffeIDs = ["F01-AnNE", "F02-GEMINA", "F03-PEGGY", "F04-Heartbreaker", "F05-Angry Momma 1", "F06->Ear", "F07-Bumpnotch", "F08-Pine", "F09-Hot Cross Bun", "F10-Eliza", "F11-Michelle", "F12-Scorpion (Evah)", "F13-Whitedot", "F14-Dumbo Sleepy Face (Cheerleader)", "F15-Notch", "F16-Bumpy", "F17-Grasshopper", "F18-Jenny Holmes", "F19-Arrow", "F20-Gelato", "F21-Cookie", "F22-Tara", "F23-Lana", "F24-Angry Momma 2", "F25-Taylor", "F26-Drooly (Flower Power)", "F27-Gabby", "F28-Keister", "F29-Haylo", "F30-Valerie", "F31-Holly", "F32-Sparkles", "F33-Domino", "F34-", "F35-GPS", "F36-Palm", "F37-Gamboge", "F01-Winky", "F02-Roo", "F03-Blonde", "F04-Smiler", "F05-Brookelee", "M01-Hips", "M02-Will Smith", "M03-Speculo", "M04-Good Straits", "M05-Arteides", "M06-Thor", "M07-Dobby", "M08-Magnet", "M09-Carrot", "M10-Boldy", "M11-Craig", "M12-Kyle", "M13-Richie Palmer", "M14-Uno", "M15-Acacia Vincent", "M16-Jeff", "M17-Biscoff", "M18-Cupid", "M19-Madmax", "M20-Valentine", "M21-Mysterio", "M22-Positive Pete", "M23-Maxwell", "M24-Klaus", "M25-Fat Foot Phillip", "M26-Brian", "M27-", "M28-Chuckles", "M29-Ulfor", "M30-Toto", "M31-Houdini", "M01-Pin Cushion", "M02-Cornetto", "M03-Clover", "M04-Dragon", "M05-Blonde", "M06-James Bond", "M07-Dimpelberry", "M08-Tony", "M09-Nova", "M10-Sunny", "M11-Star", "M12-Jigsaw Sam", "M13-Tufty", "M14-", "M15-", "M16-Laurie", "M17-Kaia", "M18-", "M19-", "M20-Hlahlalesi"];
 
   const fetchImage = async () => {
     try {
